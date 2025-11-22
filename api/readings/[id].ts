@@ -1,8 +1,8 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import moment from 'moment';
-import { ensureDatabase, syncDatabaseToBlob } from '../db-utils';
+const { VercelRequest, VercelResponse } = require('@vercel/node');
+const moment = require('moment');
+const { ensureDatabase, syncDatabaseToBlob } = require('../db-utils');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'PUT,OPTIONS');
@@ -54,5 +54,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } finally {
     db.close();
   }
-}
-
+};

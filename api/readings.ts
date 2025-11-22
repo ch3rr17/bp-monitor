@@ -1,9 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import moment from 'moment';
-import { promisify } from 'util';
-import { ensureDatabase, syncDatabaseToBlob } from './db-utils';
+const { VercelRequest, VercelResponse } = require('@vercel/node');
+const moment = require('moment');
+const { promisify } = require('util');
+const { ensureDatabase, syncDatabaseToBlob } = require('./db-utils');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req: any, res: any) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -118,5 +118,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } finally {
     db.close();
   }
-}
-
+};

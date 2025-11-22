@@ -1,7 +1,7 @@
-import { put, head, getDownloadUrl } from '@vercel/blob';
-import sqlite3 from 'sqlite3';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { promisify } from 'util';
+const { put, head, getDownloadUrl } = require('@vercel/blob');
+const sqlite3 = require('sqlite3');
+const { readFileSync, writeFileSync, existsSync } = require('fs');
+const { promisify } = require('util');
 
 const DB_BLOB_KEY = 'bp_readings.db';
 const LOCAL_DB_PATH = '/tmp/bp_readings.db';
@@ -9,7 +9,7 @@ const LOCAL_DB_PATH = '/tmp/bp_readings.db';
 /**
  * Downloads the database from Blob Storage if it exists, or creates a new one
  */
-export async function ensureDatabase(): Promise<any> {
+async function ensureDatabase(): Promise<any> {
   const dbPath = process.env.VERCEL ? LOCAL_DB_PATH : './bp_readings.db';
   
   // On Vercel, try to download from Blob Storage
@@ -65,7 +65,7 @@ export async function ensureDatabase(): Promise<any> {
 /**
  * Uploads the database to Blob Storage (only on Vercel)
  */
-export async function syncDatabaseToBlob(): Promise<void> {
+async function syncDatabaseToBlob(): Promise<void> {
   if (!process.env.VERCEL || !process.env.BLOB_READ_WRITE_TOKEN) {
     return; // Skip on local development
   }
@@ -90,3 +90,4 @@ export async function syncDatabaseToBlob(): Promise<void> {
   }
 }
 
+module.exports = { ensureDatabase, syncDatabaseToBlob };

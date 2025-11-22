@@ -5,4 +5,6 @@ bp_readings.db
 dist
 .vscode
 .idea
-
+*.db
+*.sqlite
+*.sqlite3

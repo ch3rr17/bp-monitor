@@ -1,5 +1,5 @@
 import { put, head, getDownloadUrl } from '@vercel/blob';
-const sqlite3 = require('sqlite3');
+import sqlite3 from 'sqlite3';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { promisify } from 'util';
 

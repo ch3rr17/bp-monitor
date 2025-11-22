@@ -5,10 +5,8 @@
   "installCommand": "npm install",
   "framework": "vite",
   "functions": {
-    "api/readings.ts": {
-      "maxDuration": 10
-    },
-    "api/readings/[id].ts": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@5.5.9",
       "maxDuration": 10
     }
   },

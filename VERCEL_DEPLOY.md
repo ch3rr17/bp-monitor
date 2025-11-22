@@ -153,12 +153,30 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-### API Routes Return 500 Errors
+### API Routes Return 500 Errors / "Cannot use import statement" Error
+
+**This error means Vercel isn't transpiling TypeScript properly.**
+
+**Fix:**
+1. ✅ **Ensure `@vercel/node` is in `dependencies`** (not `devDependencies`) - This is critical!
+2. Check that your `vercel.json` has the functions configuration with runtime specified
+3. Make sure your `api/` directory contains `.ts` files (not `.js`)
+4. Redeploy after moving `@vercel/node` to dependencies
+5. If still failing, check function logs for more details
+
+**Quick Fix:**
+```bash
+# Move @vercel/node to dependencies
+npm uninstall @vercel/node
+npm install @vercel/node
+# Then commit and redeploy
+```
 
 **Check:**
 - Function logs in Vercel Dashboard → Deployments → Functions tab
 - Ensure `BLOB_READ_WRITE_TOKEN` is set correctly
 - Verify Blob Storage is created
+- Ensure `api/` directory contains `.ts` files (not `.js`)
 
 ### Database Not Persisting
 

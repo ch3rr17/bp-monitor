@@ -6,6 +6,7 @@ function AddEntry() {
   const navigate = useNavigate()
   const [systolic, setSystolic] = useState('')
   const [diastolic, setDiastolic] = useState('')
+  const [heartRate, setHeartRate] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -14,9 +15,10 @@ function AddEntry() {
     
     const sysNum = parseInt(systolic)
     const diaNum = parseInt(diastolic)
+    const hrNum = heartRate ? parseInt(heartRate) : null
 
     if (isNaN(sysNum) || isNaN(diaNum)) {
-      setError('Please enter valid numbers')
+      setError('Please enter valid numbers for blood pressure')
       return
     }
 
@@ -30,10 +32,15 @@ function AddEntry() {
       return
     }
 
+    if (heartRate && (isNaN(hrNum!) || hrNum! < 30 || hrNum! > 250)) {
+      setError('Heart rate must be between 30 and 250 bpm')
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
-      await createReading(sysNum, diaNum)
+      await createReading(sysNum, diaNum, hrNum)
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save entry')
@@ -87,6 +94,25 @@ function AddEntry() {
               placeholder="80"
               value={diastolic}
               onChange={(e) => setDiastolic(e.target.value)}
+              className="w-full px-3 py-3 sm:py-2.5 border border-input rounded-md text-base box-border focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring touch-manipulation"
+            />
+          </div>
+          <div className="mb-4 sm:mb-5">
+            <label
+              htmlFor="heartRate"
+              className="block mb-2 font-medium text-sm sm:text-base"
+            >
+              Heart Rate (bpm) <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <input
+              type="number"
+              id="heartRate"
+              name="heartRate"
+              min="30"
+              max="250"
+              placeholder="72"
+              value={heartRate}
+              onChange={(e) => setHeartRate(e.target.value)}
               className="w-full px-3 py-3 sm:py-2.5 border border-input rounded-md text-base box-border focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring touch-manipulation"
             />
           </div>

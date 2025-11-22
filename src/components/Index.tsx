@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchReadings } from '../api'
-import { ReadingGroup } from '../types'
+import { ReadingGroup, Reading } from '../types'
 import { exportToPDF } from '../utils/pdfExport'
+import { Pencil } from 'lucide-react'
+import EditEntry from './EditEntry'
 
 function Index() {
   const [groups, setGroups] = useState<ReadingGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editingReading, setEditingReading] = useState<Reading | null>(null)
 
   useEffect(() => {
     loadReadings()
@@ -92,19 +95,38 @@ function Index() {
                           AM Readings
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {group.am.map((entry, entryIdx) => (
-                            <div
-                              key={entryIdx}
-                              className="bg-muted px-3 py-2 rounded-md text-sm"
-                            >
-                              <span className="font-bold text-primary">
-                                {entry.systolic}/{entry.diastolic}
-                              </span>
-                              <span className="text-muted-foreground text-xs ml-2">
-                                {entry.time}
-                              </span>
-                            </div>
-                          ))}
+                    {group.am.map((entry, entryIdx) => (
+                      <div
+                        key={entryIdx}
+                        className="bg-muted px-3 py-2 rounded-md text-sm flex items-center justify-between gap-2"
+                      >
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <span className="font-bold text-primary">
+                            {entry.systolic}/{entry.diastolic}
+                          </span>
+                          {entry.heartRate && (
+                            <span className="text-accent-foreground font-medium">
+                              HR: {entry.heartRate}
+                            </span>
+                          )}
+                          <span className="text-muted-foreground text-xs">
+                            {entry.time}
+                          </span>
+                          {entry.editedAt && (
+                            <span className="text-muted-foreground text-xs italic">
+                              (edited {new Date(entry.editedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setEditingReading(entry)}
+                          className="text-muted-foreground hover:text-primary transition-colors p-1 touch-manipulation"
+                          aria-label="Edit entry"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
+                    ))}
                         </div>
                       </div>
                     )}
@@ -115,19 +137,38 @@ function Index() {
                           PM Readings
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {group.pm.map((entry, entryIdx) => (
-                            <div
-                              key={entryIdx}
-                              className="bg-muted px-3 py-2 rounded-md text-sm"
-                            >
-                              <span className="font-bold text-primary">
-                                {entry.systolic}/{entry.diastolic}
-                              </span>
-                              <span className="text-muted-foreground text-xs ml-2">
-                                {entry.time}
-                              </span>
-                            </div>
-                          ))}
+                    {group.pm.map((entry, entryIdx) => (
+                      <div
+                        key={entryIdx}
+                        className="bg-muted px-3 py-2 rounded-md text-sm flex items-center justify-between gap-2"
+                      >
+                        <div className="flex items-center flex-wrap gap-1.5">
+                          <span className="font-bold text-primary">
+                            {entry.systolic}/{entry.diastolic}
+                          </span>
+                          {entry.heartRate && (
+                            <span className="text-accent-foreground font-medium">
+                              HR: {entry.heartRate}
+                            </span>
+                          )}
+                          <span className="text-muted-foreground text-xs">
+                            {entry.time}
+                          </span>
+                          {entry.editedAt && (
+                            <span className="text-muted-foreground text-xs italic">
+                              (edited {new Date(entry.editedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setEditingReading(entry)}
+                          className="text-muted-foreground hover:text-primary transition-colors p-1 touch-manipulation"
+                          aria-label="Edit entry"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
+                    ))}
                         </div>
                       </div>
                     )}
@@ -165,14 +206,33 @@ function Index() {
                           {group.am.map((entry, entryIdx) => (
                             <div
                               key={entryIdx}
-                              className="inline-block bg-muted px-2 py-1 rounded-md my-0.5 mr-1.5 text-sm"
+                              className="inline-flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md my-0.5 mr-1.5 text-sm"
                             >
-                              <span className="font-bold text-primary">
-                                {entry.systolic}/{entry.diastolic}
-                              </span>
-                              <span className="text-muted-foreground text-xs ml-1">
-                                {entry.time}
-                              </span>
+                              <div className="flex items-center flex-wrap gap-1">
+                                <span className="font-bold text-primary">
+                                  {entry.systolic}/{entry.diastolic}
+                                </span>
+                                {entry.heartRate && (
+                                  <span className="text-accent-foreground font-medium">
+                                    HR: {entry.heartRate}
+                                  </span>
+                                )}
+                                <span className="text-muted-foreground text-xs">
+                                  {entry.time}
+                                </span>
+                                {entry.editedAt && (
+                                  <span className="text-muted-foreground text-xs italic">
+                                    (edited {new Date(entry.editedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setEditingReading(entry)}
+                                className="text-muted-foreground hover:text-primary transition-colors p-0.5"
+                                aria-label="Edit entry"
+                              >
+                                <Pencil size={12} />
+                              </button>
                             </div>
                           ))}
                         </td>
@@ -180,14 +240,33 @@ function Index() {
                           {group.pm.map((entry, entryIdx) => (
                             <div
                               key={entryIdx}
-                              className="inline-block bg-muted px-2 py-1 rounded-md my-0.5 mr-1.5 text-sm"
+                              className="inline-flex items-center gap-1.5 bg-muted px-2 py-1 rounded-md my-0.5 mr-1.5 text-sm"
                             >
-                              <span className="font-bold text-primary">
-                                {entry.systolic}/{entry.diastolic}
-                              </span>
-                              <span className="text-muted-foreground text-xs ml-1">
-                                {entry.time}
-                              </span>
+                              <div className="flex items-center flex-wrap gap-1">
+                                <span className="font-bold text-primary">
+                                  {entry.systolic}/{entry.diastolic}
+                                </span>
+                                {entry.heartRate && (
+                                  <span className="text-accent-foreground font-medium">
+                                    HR: {entry.heartRate}
+                                  </span>
+                                )}
+                                <span className="text-muted-foreground text-xs">
+                                  {entry.time}
+                                </span>
+                                {entry.editedAt && (
+                                  <span className="text-muted-foreground text-xs italic">
+                                    (edited {new Date(entry.editedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => setEditingReading(entry)}
+                                className="text-muted-foreground hover:text-primary transition-colors p-0.5"
+                                aria-label="Edit entry"
+                              >
+                                <Pencil size={12} />
+                              </button>
                             </div>
                           ))}
                         </td>
@@ -200,6 +279,17 @@ function Index() {
           )}
         </div>
       </div>
+      
+      {editingReading && (
+        <EditEntry
+          reading={editingReading}
+          onClose={() => setEditingReading(null)}
+          onSuccess={() => {
+            loadReadings()
+            setEditingReading(null)
+          }}
+        />
+      )}
     </div>
   )
 }

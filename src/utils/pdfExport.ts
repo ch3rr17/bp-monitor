@@ -55,15 +55,18 @@ export function exportToPDF(groups: ReadingGroup[]) {
         group.date,
         '-',
         '-',
+        '-',
         '-'
       ]);
     } else {
       allReadings.forEach((reading, idx) => {
+        const readingStr = `${reading.systolic}/${reading.diastolic}`;
+        const heartRateStr = reading.heartRate ? ` HR: ${reading.heartRate}` : '';
         tableData.push([
           idx === 0 ? group.date : '', // Only show date in first row
           reading.period,
           reading.time,
-          `${reading.systolic}/${reading.diastolic}`
+          readingStr + heartRateStr
         ]);
       });
     }
@@ -71,7 +74,7 @@ export function exportToPDF(groups: ReadingGroup[]) {
   
   // Create table
   autoTable(doc, {
-    head: [['Date', 'Period', 'Time', 'Reading (Systolic/Diastolic)']],
+    head: [['Date', 'Period', 'Time', 'Reading (BP / Heart Rate)']],
     body: tableData,
     startY: 40,
     styles: {
@@ -90,7 +93,7 @@ export function exportToPDF(groups: ReadingGroup[]) {
       0: { cellWidth: 50 }, // Date
       1: { cellWidth: 30 }, // Period
       2: { cellWidth: 40 }, // Time
-      3: { cellWidth: 60, halign: 'center' }, // Reading
+      3: { cellWidth: 70, halign: 'center' }, // Reading
     },
     margin: { top: 35 },
   });

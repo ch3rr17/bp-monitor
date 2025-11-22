@@ -18,8 +18,26 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     systolic INTEGER,
     diastolic INTEGER,
-    timestamp TEXT
+    heart_rate INTEGER,
+    timestamp TEXT,
+    edited_at TEXT
   )`);
+  
+  // Add heart_rate column if it doesn't exist (migration for existing databases)
+  db.run(`ALTER TABLE readings ADD COLUMN heart_rate INTEGER`, (err) => {
+    // Ignore error if column already exists
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Migration error:', err);
+    }
+  });
+  
+  // Add edited_at column if it doesn't exist (migration for existing databases)
+  db.run(`ALTER TABLE readings ADD COLUMN edited_at TEXT`, (err) => {
+    // Ignore error if column already exists
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Migration error:', err);
+    }
+  });
 });
 
 // API Routes
@@ -43,9 +61,12 @@ app.get('/api/readings', (_req: Request, res: Response) => {
       }
 
       const entry = {
+        id: row.id,
         systolic: row.systolic,
         diastolic: row.diastolic,
-        time: m.format('h:mm A')
+        heartRate: row.heart_rate || null,
+        time: m.format('h:mm A'),
+        editedAt: row.edited_at || null
       };
 
       // Check if AM or PM (before 12:00 is AM, 12:00 and after is PM)
@@ -67,7 +88,7 @@ app.get('/api/readings', (_req: Request, res: Response) => {
 
 // Create a new reading
 app.post('/api/readings', (req: Request, res: Response) => {
-  const { systolic, diastolic } = req.body;
+  const { systolic, diastolic, heartRate } = req.body;
   
   if (!systolic || !diastolic) {
     return res.status(400).json({ error: 'Systolic and diastolic are required' });
@@ -76,13 +97,39 @@ app.post('/api/readings', (req: Request, res: Response) => {
   const timestamp = moment().toISOString();
 
   db.run(
-    `INSERT INTO readings (systolic, diastolic, timestamp) VALUES (?, ?, ?)`,
-    [systolic, diastolic, timestamp],
+    `INSERT INTO readings (systolic, diastolic, heart_rate, timestamp) VALUES (?, ?, ?, ?)`,
+    [systolic, diastolic, heartRate || null, timestamp],
     function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.status(201).json({ id: this.lastID, systolic, diastolic, timestamp });
+      res.status(201).json({ id: this.lastID, systolic, diastolic, heartRate: heartRate || null, timestamp });
+    }
+  );
+});
+
+// Update a reading
+app.put('/api/readings/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { systolic, diastolic, heartRate } = req.body;
+  
+  if (!systolic || !diastolic) {
+    return res.status(400).json({ error: 'Systolic and diastolic are required' });
+  }
+
+  const editedAt = moment().toISOString();
+
+  db.run(
+    `UPDATE readings SET systolic = ?, diastolic = ?, heart_rate = ?, edited_at = ? WHERE id = ?`,
+    [systolic, diastolic, heartRate || null, editedAt, id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Reading not found' });
+      }
+      res.json({ id: parseInt(id), systolic, diastolic, heartRate: heartRate || null, editedAt });
     }
   );
 });

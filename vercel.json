@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "functions": {
+    "api/readings.ts": {
+      "maxDuration": 10
+    },
+    "api/readings/[id].ts": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+

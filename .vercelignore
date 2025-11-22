@@ -1,0 +1,8 @@
+node_modules
+bp_readings.db
+.env
+.env.local
+dist
+.vscode
+.idea
+

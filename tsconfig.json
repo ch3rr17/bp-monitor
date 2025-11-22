@@ -18,7 +18,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src", "server.ts", "api"],
+  "include": ["src", "server.ts"],
+  "exclude": ["api", "node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 

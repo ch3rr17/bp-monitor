@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import sqlite3 from 'sqlite3';
 import moment from 'moment';
 import { promisify } from 'util';
 import { ensureDatabase, syncDatabaseToBlob } from './db-utils';
@@ -17,7 +16,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const db = await ensureDatabase();
-  const run = promisify(db.run.bind(db));
   const all = promisify(db.all.bind(db));
 
   try {
@@ -70,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         db.run(
           `INSERT INTO readings (systolic, diastolic, heart_rate, timestamp) VALUES (?, ?, ?, ?)`,
           [systolic, diastolic, heartRate || null, timestamp],
-          function(err) {
+          function(err: Error | null) {
             if (err) reject(err);
             else resolve();
           }
@@ -96,7 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         db.run(
           `UPDATE readings SET systolic = ?, diastolic = ?, heart_rate = ?, edited_at = ? WHERE id = ?`,
           [systolic, diastolic, heartRate || null, editedAt, id],
-          function(err) {
+          function(this: { changes: number }, err: Error | null) {
             if (err) reject(err);
             else resolve({ changes: this.changes });
           }

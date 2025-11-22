@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchReadings } from '../api'
 import { ReadingGroup, Reading } from '../types'
-import { exportToPDF } from '../utils/pdfExport'
 import { Pencil } from 'lucide-react'
 import EditEntry from './EditEntry'
 
@@ -11,6 +10,7 @@ function Index() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editingReading, setEditingReading] = useState<Reading | null>(null)
+  const [exportingPDF, setExportingPDF] = useState(false)
 
   useEffect(() => {
     loadReadings()
@@ -56,10 +56,22 @@ function Index() {
         <div className="mb-4 sm:mb-5 flex flex-col sm:flex-row gap-2 sm:gap-2.5 sm:justify-end">
           {groups.length > 0 && (
             <button
-              onClick={() => exportToPDF(groups)}
-              className="w-full sm:w-auto inline-block px-5 py-3 sm:py-2.5 rounded-md bg-secondary text-secondary-foreground font-medium text-center cursor-pointer border-none text-base hover:opacity-90 transition-opacity touch-manipulation"
+              onClick={async () => {
+                try {
+                  setExportingPDF(true)
+                  const { exportToPDF } = await import('../utils/pdfExport')
+                  await exportToPDF(groups)
+                } catch (err) {
+                  console.error('Failed to export PDF:', err)
+                  alert('Failed to export PDF. Please try again.')
+                } finally {
+                  setExportingPDF(false)
+                }
+              }}
+              disabled={exportingPDF}
+              className="w-full sm:w-auto inline-block px-5 py-3 sm:py-2.5 rounded-md bg-secondary text-secondary-foreground font-medium text-center cursor-pointer border-none text-base hover:opacity-90 transition-opacity touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Export to PDF
+              {exportingPDF ? 'Exporting...' : 'Export to PDF'}
             </button>
           )}
           <Link

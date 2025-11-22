@@ -157,20 +157,32 @@ npm install
 
 **This error means Vercel isn't transpiling TypeScript properly.**
 
-**Fix:**
-1. ✅ **Ensure `@vercel/node` is in `dependencies`** (not `devDependencies`) - This is critical!
-2. Check that your `vercel.json` has the functions configuration with runtime specified
-3. Make sure your `api/` directory contains `.ts` files (not `.js`)
-4. Redeploy after moving `@vercel/node` to dependencies
-5. If still failing, check function logs for more details
+**The Issue:**
+Vercel should automatically transpile TypeScript files in the `api/` directory, but sometimes it doesn't work correctly. The error shows Vercel is trying to run a `.js` file that still has ES6 imports.
 
-**Quick Fix:**
-```bash
-# Move @vercel/node to dependencies
-npm uninstall @vercel/node
-npm install @vercel/node
-# Then commit and redeploy
-```
+**Fix Steps:**
+
+1. ✅ **Ensure `@vercel/node` is in `dependencies`** (not `devDependencies`) - This is critical!
+   - Check your `package.json` - it should be under `dependencies`, not `devDependencies`
+
+2. ✅ **Ensure `api/` directory only contains `.ts` files**
+   - Vercel should handle TypeScript automatically
+   - Don't manually compile the API files
+
+3. ✅ **Simplified `vercel.json`**
+   - Vercel auto-detects TypeScript in `api/` directory
+   - You don't need explicit function configuration (but it's fine to have it)
+
+4. **If still failing:**
+   - Check Vercel function logs for more details
+   - Try removing any `api/tsconfig.json` if it exists
+   - Ensure your `tsconfig.json` excludes the `api/` directory from the main build
+   - Redeploy after making changes
+
+**Note:** Vercel automatically transpiles TypeScript files in the `api/` directory using `@vercel/node`. If you see this error, it usually means:
+- `@vercel/node` is missing or in wrong dependencies section
+- There's a configuration conflict
+- The API files are being compiled incorrectly by the build step
 
 **Check:**
 - Function logs in Vercel Dashboard → Deployments → Functions tab

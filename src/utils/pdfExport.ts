@@ -1,8 +1,11 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { ReadingGroup } from '../types';
 
-export function exportToPDF(groups: ReadingGroup[]) {
+export async function exportToPDF(groups: ReadingGroup[]) {
+  // Dynamically import PDF libraries only when needed
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ]);
   if (groups.length === 0) {
     return; // Don't export if there are no readings
   }

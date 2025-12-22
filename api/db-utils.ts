@@ -1,4 +1,4 @@
-const { put, head, getDownloadUrl } = require('@vercel/blob');
+const { put, head } = require('@vercel/blob');
 const sqlite3 = require('sqlite3');
 const { readFileSync, writeFileSync, existsSync } = require('fs');
 const { promisify } = require('util');
@@ -14,21 +14,23 @@ async function ensureDatabase(): Promise<any> {
   
   // On Vercel, try to download from Blob Storage
   if (process.env.VERCEL && process.env.BLOB_READ_WRITE_TOKEN) {
+    console.log('Running on Vercel, checking Blob Storage for database...');
     try {
       // Check if blob exists and download it
       try {
-        await head(DB_BLOB_KEY, { token: process.env.BLOB_READ_WRITE_TOKEN });
+        console.log('Checking if blob exists:', DB_BLOB_KEY);
+        const blobInfo = await head(DB_BLOB_KEY, { token: process.env.BLOB_READ_WRITE_TOKEN });
         
-        // Get download URL and fetch the file
-        const downloadUrl = await getDownloadUrl(DB_BLOB_KEY);
-        const response = await fetch(downloadUrl);
+        // Use the URL from the blob info to download the file
+        console.log('Blob exists, downloading from:', blobInfo.url);
+        const response = await fetch(blobInfo.url);
         if (!response.ok) {
           throw new Error(`Failed to download database: ${response.statusText}`);
         }
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         writeFileSync(dbPath, buffer);
-        console.log('Database downloaded from Blob Storage');
+        console.log(`Database downloaded from Blob Storage (${buffer.length} bytes)`);
       } catch (error: any) {
         // Blob doesn't exist yet, create new database
         if (error.statusCode === 404 || error.name === 'BlobNotFoundError') {
@@ -40,6 +42,8 @@ async function ensureDatabase(): Promise<any> {
     } catch (error) {
       console.error('Error downloading database:', error);
     }
+  } else {
+    console.log('Running locally, using local database file');
   }
 
   const db = new sqlite3.Database(dbPath);
@@ -67,23 +71,26 @@ async function ensureDatabase(): Promise<any> {
  */
 async function syncDatabaseToBlob(): Promise<void> {
   if (!process.env.VERCEL || !process.env.BLOB_READ_WRITE_TOKEN) {
+    console.log('Skipping blob sync (not on Vercel or no token)');
     return; // Skip on local development
   }
 
   try {
     if (!existsSync(LOCAL_DB_PATH)) {
+      console.log('No database file to upload at', LOCAL_DB_PATH);
       return; // No database file to upload
     }
 
     const dbBuffer = readFileSync(LOCAL_DB_PATH);
+    console.log(`Uploading database to Blob Storage (${dbBuffer.length} bytes)`);
     
-    await put(DB_BLOB_KEY, dbBuffer, {
+    const result = await put(DB_BLOB_KEY, dbBuffer, {
       access: 'public',
       token: process.env.BLOB_READ_WRITE_TOKEN,
       addRandomSuffix: false, // Keep same filename
     });
     
-    console.log('Database synced to Blob Storage');
+    console.log('Database synced to Blob Storage successfully:', result.url);
   } catch (error) {
     console.error('Error syncing database to Blob Storage:', error);
     // Don't throw - we don't want to fail the request if sync fails

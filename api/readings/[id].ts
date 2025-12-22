@@ -41,8 +41,14 @@ module.exports = async function handler(req: any, res: any) {
     });
 
     if (result.changes === 0) {
+      db.close();
       return res.status(404).json({ error: 'Reading not found' });
     }
+
+    // Close database to ensure all writes are flushed
+    await new Promise<void>((resolve) => {
+      db.close(() => resolve());
+    });
 
     // Sync database to Blob Storage after write
     await syncDatabaseToBlob();
@@ -50,8 +56,9 @@ module.exports = async function handler(req: any, res: any) {
     res.json({ success: true });
   } catch (error: any) {
     console.error('Database error:', error);
+    if (db) {
+      try { db.close(); } catch (e) {}
+    }
     res.status(500).json({ error: error.message || 'Database Error' });
-  } finally {
-    db.close();
   }
 };

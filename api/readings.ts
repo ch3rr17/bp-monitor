@@ -53,7 +53,9 @@ module.exports = async function handler(req: any, res: any) {
         .sort((a, b) => b.localeCompare(a))
         .map(key => grouped[key]);
 
+      db.close();
       res.json(sortedGroups);
+      return;
     } else if (req.method === 'POST') {
       // Create a new reading
       const { systolic, diastolic, heartRate } = req.body;
@@ -75,10 +77,16 @@ module.exports = async function handler(req: any, res: any) {
         );
       });
 
+      // Close database to ensure all writes are flushed
+      await new Promise<void>((resolve) => {
+        db.close(() => resolve());
+      });
+
       // Sync database to Blob Storage after write
       await syncDatabaseToBlob();
       
       res.status(201).json({ success: true });
+      return; // Exit early since we already closed the db
     } else if (req.method === 'PUT') {
       // Update a reading
       const { id } = req.query;
@@ -102,20 +110,30 @@ module.exports = async function handler(req: any, res: any) {
       });
 
       if (result.changes === 0) {
+        db.close();
         return res.status(404).json({ error: 'Reading not found' });
       }
+
+      // Close database to ensure all writes are flushed
+      await new Promise<void>((resolve) => {
+        db.close(() => resolve());
+      });
 
       // Sync database to Blob Storage after write
       await syncDatabaseToBlob();
       
       res.json({ success: true });
+      return; // Exit early since we already closed the db
     } else {
+      db.close();
       res.status(405).json({ error: 'Method not allowed' });
+      return;
     }
   } catch (error: any) {
     console.error('Database error:', error);
+    if (db) {
+      try { db.close(); } catch (e) {}
+    }
     res.status(500).json({ error: error.message || 'Database Error' });
-  } finally {
-    db.close();
   }
 };
